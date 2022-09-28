@@ -23,7 +23,7 @@ class QLearning {
     minEpsilon = 0.05;
     subNum = 0.001;
 
-    gamma = 0.95;
+    gamma = 0.9;
     learning_rate = 0.8;
     moveReward = -1;
 
@@ -32,13 +32,13 @@ class QLearning {
         this.nodes = [...this.originalNodes];
         // UAV 初始位置為 sink
         this.qTable = this.buildQtable();
-        this.sinkNode =  this.getSinkNode();
         this.init();
     }
 
     init() {
         this.route = [];
         this.nodes = [...this.originalNodes];
+        this.sinkNode =  this.getSinkNode();
         this.currState = this.sinkNode;
         this.route.push(this.currState);
     }
@@ -60,13 +60,13 @@ class QLearning {
     getNode(index) {
         const nodeIndex = this.nodes.findIndex((item) => item.index === index);
         const [node] = this.nodes.splice(nodeIndex, 1);
+
         return node;
     }
 
     getNextState() {
 
         let nextState;
-        console.log(this.currState)
 
         // 小於 epsilon，則隨機取得下一個 state
         // if (Math.random() < this.epsilon) {
@@ -74,47 +74,55 @@ class QLearning {
         //     console.log('actionIndex random', actionIndex)
         //     nextState = this.getNode(actionIndex);
         // } else {
-            const nodesIndex = this.nodes.map(item => item.index);
-            const currStateQTable = this.qTable[this.currState.index]
-                .map((value, index) => ({ value, index }))
-                .filter(item => nodesIndex.includes(item.index));
-
-            // console.log('==========currStateQTable==============')
-            // console.table(currStateQTable)
-            // console.log('==========currStateQTable end==========')
-
-            const maxReward = Math.max(...currStateQTable.map(item => item.value));
-            const maxRewardIndex = currStateQTable.find(item => item.value === maxReward).index;
-
+            const maxReward = this.getReward(this.currState.index);
+            const maxRewardIndex = this.getStateQTable(this.currState.index).find(item => item.value === maxReward).index;
+            console.log('getNextState')
+            console.log(nextState);
             nextState = this.getNode(maxRewardIndex);
-            const nextStateQTable = this.qTable[nextState.index]
-                .map((value, index) => ({ value, index }))
-                .filter(item => nodesIndex.includes(item.index));
-
-            const nextReward = Math.max(...nextStateQTable.map(item => item.value));
-
-            this.qTable[this.currState.index][nextState.index] = this.qTable[this.currState.index][nextState.index] + this.learning_rate * (
-                this.moveReward + this.gamma * nextReward - this.qTable[this.currState.index][nextState.index]
-            )
-            console.table(this.qTable)
+            const nextMaxReward = this.getReward(nextState.index)
+            this.qTable[this.currState.index][nextState.index] = this.updateQTable(this.currState.index, nextState.index, nextMaxReward);
+            console.table(this.qTable);
         // }
 
         return nextState;
     }
 
-    updateEpsilon() {
-        if(this.epsilon > this.minEpsilon) {
-            this.epsilon -= this.subNum;
-        }
+    getStateQTable(stateIndex) {
+        const nodesIndex = this.nodes.map(item => item.index);
+        return this.qTable[stateIndex]
+            .map((value, index) => ({ value, index }))
+            .filter(item =>  nodesIndex.includes(item.index));
+    }
+
+    getReward(stateIndex) {
+        const stateQTable = this.getStateQTable(stateIndex);
+        return Math.max(...stateQTable.map(item => item.value));
+    }
+
+    updateQTable(currStateIndex, nextStateIndex, nextReward) {
+        return this.qTable[currStateIndex][nextStateIndex] + this.learning_rate * (
+            this.moveReward + this.gamma * nextReward - this.qTable[currStateIndex][nextStateIndex]
+        )
     }
 
     setRoute() {
         const loopNum = this.nodes.length;
-        console.log(loopNum);
-        for(let i=0; i<loopNum; i++) {
+        for(let i=0; i<loopNum -1; i++) {
             this.currState = this.getNextState();
             this.updateEpsilon();
             this.route.push(this.currState);
+        }
+        // TODO: 昨天寫在那
+        // this.nodes.push(this.sinkNode);
+        // this.currState = this.getNextState();
+        // this.updateEpsilon();
+        // this.route.push(this.currState);
+        // console.table(this.qTable);
+    }
+
+    updateEpsilon() {
+        if(this.epsilon > this.minEpsilon) {
+            this.epsilon -= this.subNum;
         }
     }
 
@@ -143,8 +151,8 @@ class QLearning {
             // console.log('==========================', i, '==========================');
             this.setRoute()
             // back sink
-            this.route.push(this.sinkNode);
-            // console.table(this.route);
+
+            console.table(this.route);
             // const distance = this.getDistance();
             // this.updateFinishReward(distance);
             this.init();
