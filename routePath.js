@@ -12,6 +12,8 @@ const map = [
 class QLearning {
 
     route = [];
+    nodes = [];
+    originalNodes = []
     qTable = [];
     currState = null;
     sinkNode = null;
@@ -26,7 +28,8 @@ class QLearning {
     moveReward = -1;
 
     constructor(nodes) {
-        this.nodes = [...nodes];
+        this.originalNodes = [...nodes];
+        this.nodes = [...this.originalNodes];
         // UAV 初始位置為 sink
         this.qTable = this.buildQtable();
         this.sinkNode =  this.getSinkNode();
@@ -34,7 +37,8 @@ class QLearning {
     }
 
     init() {
-        // this.route = [];
+        this.route = [];
+        this.nodes = [...this.originalNodes];
         this.currState = this.sinkNode;
         this.route.push(this.currState);
     }
@@ -54,28 +58,46 @@ class QLearning {
     }
 
     getNode(index) {
-        const node = this.nodes[index];
-        this.nodes.splice(index, 1);
+        const nodeIndex = this.nodes.findIndex((item) => item.index === index);
+        const [node] = this.nodes.splice(nodeIndex, 1);
         return node;
     }
 
     getNextState() {
+
         let nextState;
-        let action;
+        console.log(this.currState)
 
         // 小於 epsilon，則隨機取得下一個 state
-        if (Math.random() < this.epsilon) {
-            action = getRandom(this.nodes.length);
-            nextState = this.getNode(action);
-        } else {
-            const maxReward = Math.max(...this.qTable[this.currState]);
-            const action = this.qTable[this.currState].findIndex(reward => reward === maxReward);
-            nextState = action;
-            const nextReward = Math.max(...this.qTable[nextState]);
-            this.qTable[this.currState][action] = this.qTable[this.currState][action] + learning_rate * (
-                moveReward + gamma * nextReward - this.qTable[this.currState][action]
+        // if (Math.random() < this.epsilon) {
+        //     actionIndex = getRandom(this.nodes.length);
+        //     console.log('actionIndex random', actionIndex)
+        //     nextState = this.getNode(actionIndex);
+        // } else {
+            const nodesIndex = this.nodes.map(item => item.index);
+            const currStateQTable = this.qTable[this.currState.index]
+                .map((value, index) => ({ value, index }))
+                .filter(item => nodesIndex.includes(item.index));
+
+            // console.log('==========currStateQTable==============')
+            // console.table(currStateQTable)
+            // console.log('==========currStateQTable end==========')
+
+            const maxReward = Math.max(...currStateQTable.map(item => item.value));
+            const maxRewardIndex = currStateQTable.find(item => item.value === maxReward).index;
+
+            nextState = this.getNode(maxRewardIndex);
+            const nextStateQTable = this.qTable[nextState.index]
+                .map((value, index) => ({ value, index }))
+                .filter(item => nodesIndex.includes(item.index));
+
+            const nextReward = Math.max(...nextStateQTable.map(item => item.value));
+
+            this.qTable[this.currState.index][nextState.index] = this.qTable[this.currState.index][nextState.index] + this.learning_rate * (
+                this.moveReward + this.gamma * nextReward - this.qTable[this.currState.index][nextState.index]
             )
-        }
+            console.table(this.qTable)
+        // }
 
         return nextState;
     }
@@ -86,21 +108,20 @@ class QLearning {
         }
     }
 
-    getRoute() {
-        const route = []
+    setRoute() {
         const loopNum = this.nodes.length;
+        console.log(loopNum);
         for(let i=0; i<loopNum; i++) {
             this.currState = this.getNextState();
             this.updateEpsilon();
-            route.push(this.currState);
+            this.route.push(this.currState);
         }
-        return route;
     }
 
     getDistance() {
-        console.log('route', this.route)
         let distance = 0;
-        for(let i =0; i < this.route.length-2; i++) {
+        console.table(this.route);
+        for (let i = 0; i < this.route.length -1; i++) {
             distance = distance + Math.sqrt(
                 Math.pow(this.route[i].xAxis - this.route[i+1].xAxis, 2) +
                 Math.pow(this.route[i].yAxis - this.route[i+1].yAxis, 2) 
@@ -110,7 +131,7 @@ class QLearning {
     }
 
     updateFinishReward(distance) {
-        for(let i =0; i < this.route.length-2; i++) {
+        for(let i = 0; i < this.route.length-1; i++) {
             const state = this.route[i].index;
             const nextState = this.route[i+1].index;
             this.qTable[state][nextState] = this.qTable[state][nextState] + distance / 10;
@@ -119,14 +140,16 @@ class QLearning {
 
     run() {
         for(let i=0; i<100; i++) {
-            console.log('loop', i);
-            this.route.push(...this.getRoute());
+            // console.log('==========================', i, '==========================');
+            this.setRoute()
             // back sink
             this.route.push(this.sinkNode);
-            const distance = this.getDistance();
-            this.updateFinishReward(distance);
-            console.log(this.route);
+            // console.table(this.route);
+            // const distance = this.getDistance();
+            // this.updateFinishReward(distance);
             this.init();
+            // console.log('==========================', i, 'end', '==========================');
+
         }
     }
 }
