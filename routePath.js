@@ -80,6 +80,7 @@ class QLearning {
             console.log(nextState);
             nextState = this.getNode(maxRewardIndex);
             const nextMaxReward = this.getReward(nextState.index)
+            console.log('currIndex', this.currState.index, 'nextIndex', nextState.index)
             this.qTable[this.currState.index][nextState.index] = this.updateQTable(this.currState.index, nextState.index, nextMaxReward);
             console.table(this.qTable);
         // }
@@ -99,25 +100,33 @@ class QLearning {
         return Math.max(...stateQTable.map(item => item.value));
     }
 
-    updateQTable(currStateIndex, nextStateIndex, nextReward) {
+    updateQTable(currStateIndex, nextStateIndex, nextMaxReward) {
         return this.qTable[currStateIndex][nextStateIndex] + this.learning_rate * (
-            this.moveReward + this.gamma * nextReward - this.qTable[currStateIndex][nextStateIndex]
+            this.moveReward + this.gamma * nextMaxReward - this.qTable[currStateIndex][nextStateIndex]
+        )
+    }
+
+    updateLastNodeQTable(currStateIndex, nextStateIndex) {
+        return this.qTable[currStateIndex][nextStateIndex] + this.learning_rate * (
+            this.moveReward - this.qTable[currStateIndex][nextStateIndex]
         )
     }
 
     setRoute() {
         const loopNum = this.nodes.length;
-        for(let i=0; i<loopNum -1; i++) {
+        for(let i=0; i<loopNum - 1; i++) {
             this.currState = this.getNextState();
-            this.updateEpsilon();
             this.route.push(this.currState);
         }
-        // TODO: 昨天寫在那
-        // this.nodes.push(this.sinkNode);
-        // this.currState = this.getNextState();
-        // this.updateEpsilon();
-        // this.route.push(this.currState);
-        // console.table(this.qTable);
+        // 計算倒數第二個的點獎勵值
+        const lastNode = this.nodes[0];
+        const maxReward = this.getReward(this.sinkNode.index)
+        this.qTable[this.currState.index][lastNode.index] = this.updateQTable(this.currState.index, lastNode.index, maxReward);
+        this.currState = lastNode;
+        // 計算最後的點的獎勵值
+        this.qTable[this.currState.index][this.sinkNode.index] = this.updateLastNodeQTable(this.currState.index, this.sinkNode.index);
+        this.updateEpsilon();
+        console.table(this.qTable);
     }
 
     updateEpsilon() {
