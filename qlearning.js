@@ -1,23 +1,19 @@
+const routePlan = require('./route-plan');
+console.log(routePlan);
+
 // setting
 
-const map = [
-    ['_', '_', 'T', 'B', 'S' ],
-    ['_', '_', '_', 'T', 'B' ],
-    ['I', 'I', '_', '_', 'T' ],
-    ['_', 'I', '_', '_', '_' ],
-    ['_', '_', '_', 'I', '_' ],
-];
-
 const moveReward = -1;
-const loopNum = 1000; // 迴圈執行次數
+const loopNum = 2; // 迴圈執行次數
 
 
-// TODO: 尚未實作隨機產生節點方法 - 
+// TODO: 尚未實作隨機產生節點方法
 
 // ============= utils =============
 function convertDecimalTwo(num) {
     return Number(num.toFixed(2));
 }
+// ============= utils =============
 
 class QLearning {
 
@@ -79,16 +75,16 @@ class QLearning {
         let nextState;
 
         // 小於 epsilon，則隨機取得下一個 state
-        if (Math.random() < this.epsilon) {
-            const actionIndex = getRandom(this.nodes.length);
-            nextState = this.getNode(actionIndex);
-        } else {
+        // if (Math.random() < this.epsilon) {
+        //     const actionIndex = getRandom(this.nodes.length);
+        //     nextState = this.getNode(actionIndex);
+        // } else {
             const maxReward = this.getReward(this.currState.index);
             const maxRewardIndex = this.getStateQTable(this.currState.index).find(item => item.value === maxReward).index;
             nextState = this.getNode(maxRewardIndex);
             const nextMaxReward = this.getReward(nextState.index)
             this.qTable[this.currState.index][nextState.index] = this.updateQTable(this.currState.index, nextState.index, nextMaxReward);
-        }
+        // }
 
         return nextState;
     }
