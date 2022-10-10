@@ -9,6 +9,13 @@ const map = [
     ['_', '_', '_', 'I', '_' ],
 ];
 
+// TODO: 尚未實作隨機產生節點方法 - 
+
+// ============= utils =============
+function convertDecimalTwo(num) {
+    return Number(num.toFixed(2));
+}
+
 class QLearning {
 
     route = [];
@@ -69,30 +76,23 @@ class QLearning {
         let nextState;
 
         // 小於 epsilon，則隨機取得下一個 state
-        // if (Math.random() < this.epsilon) {
-        //     actionIndex = getRandom(this.nodes.length);
-        //     console.log('actionIndex random', actionIndex)
-        //     nextState = this.getNode(actionIndex);
-        // } else {
+        if (Math.random() < this.epsilon) {
+            const actionIndex = getRandom(this.nodes.length);
+            nextState = this.getNode(actionIndex);
+        } else {
             const maxReward = this.getReward(this.currState.index);
             const maxRewardIndex = this.getStateQTable(this.currState.index).find(item => item.value === maxReward).index;
-            console.log('getNextState')
-            console.log(nextState);
             nextState = this.getNode(maxRewardIndex);
             const nextMaxReward = this.getReward(nextState.index)
-            console.log('currIndex', this.currState.index, 'nextIndex', nextState.index)
             this.qTable[this.currState.index][nextState.index] = this.updateQTable(this.currState.index, nextState.index, nextMaxReward);
-            console.table(this.qTable);
-        // }
+        }
 
         return nextState;
     }
 
     getStateQTable(stateIndex) {
-        const nodesIndex = this.nodes.map(item => item.index);
         return this.qTable[stateIndex]
             .map((value, index) => ({ value, index }))
-            .filter(item =>  nodesIndex.includes(item.index));
     }
 
     getReward(stateIndex) {
@@ -101,15 +101,15 @@ class QLearning {
     }
 
     updateQTable(currStateIndex, nextStateIndex, nextMaxReward) {
-        return this.qTable[currStateIndex][nextStateIndex] + this.learning_rate * (
+        return convertDecimalTwo(this.qTable[currStateIndex][nextStateIndex] + this.learning_rate * (
             this.moveReward + this.gamma * nextMaxReward - this.qTable[currStateIndex][nextStateIndex]
-        )
+        ))
     }
 
     updateLastNodeQTable(currStateIndex, nextStateIndex) {
-        return this.qTable[currStateIndex][nextStateIndex] + this.learning_rate * (
+        return convertDecimalTwo(this.qTable[currStateIndex][nextStateIndex] + this.learning_rate * (
             this.moveReward - this.qTable[currStateIndex][nextStateIndex]
-        )
+        ))
     }
 
     setRoute() {
@@ -120,13 +120,15 @@ class QLearning {
         }
         // 計算倒數第二個的點獎勵值
         const lastNode = this.nodes[0];
-        const maxReward = this.getReward(this.sinkNode.index)
+        const maxReward = this.getReward(this.sinkNode.index);
         this.qTable[this.currState.index][lastNode.index] = this.updateQTable(this.currState.index, lastNode.index, maxReward);
         this.currState = lastNode;
+        this.route.push(lastNode);
+
         // 計算最後的點的獎勵值
         this.qTable[this.currState.index][this.sinkNode.index] = this.updateLastNodeQTable(this.currState.index, this.sinkNode.index);
         this.updateEpsilon();
-        console.table(this.qTable);
+        this.route.push(this.sinkNode);
     }
 
     updateEpsilon() {
@@ -137,7 +139,6 @@ class QLearning {
 
     getDistance() {
         let distance = 0;
-        console.table(this.route);
         for (let i = 0; i < this.route.length -1; i++) {
             distance = distance + Math.sqrt(
                 Math.pow(this.route[i].xAxis - this.route[i+1].xAxis, 2) +
@@ -147,23 +148,25 @@ class QLearning {
         return distance;
     }
 
-    updateFinishReward(distance) {
-        for(let i = 0; i < this.route.length-1; i++) {
+    updateDistanceReward(distance) {
+        for(let i = 0; i < this.route.length - 1; i++) {
             const state = this.route[i].index;
             const nextState = this.route[i+1].index;
-            this.qTable[state][nextState] = this.qTable[state][nextState] + distance / 10;
+            const qValue = this.qTable[state][nextState] + distance / 10;
+            this.qTable[state][nextState] = convertDecimalTwo(qValue);
         }
     }
 
     run() {
-        for(let i=0; i<100; i++) {
+        for(let i=0; i<10000; i++) {
             // console.log('==========================', i, '==========================');
             this.setRoute()
             // back sink
 
-            console.table(this.route);
-            // const distance = this.getDistance();
-            // this.updateFinishReward(distance);
+            const distance = this.getDistance();
+            this.updateDistanceReward(distance);
+            console.table(this.qTable);
+
             this.init();
             // console.log('==========================', i, 'end', '==========================');
 
