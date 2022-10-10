@@ -1,5 +1,4 @@
 // setting
-const moveReward = -1;
 
 const map = [
     ['_', '_', 'T', 'B', 'S' ],
@@ -8,6 +7,10 @@ const map = [
     ['_', 'I', '_', '_', '_' ],
     ['_', '_', '_', 'I', '_' ],
 ];
+
+const moveReward = -1;
+const loopNum = 1000; // 迴圈執行次數
+
 
 // TODO: 尚未實作隨機產生節點方法 - 
 
@@ -113,8 +116,8 @@ class QLearning {
     }
 
     setRoute() {
-        const loopNum = this.nodes.length;
-        for(let i=0; i<loopNum - 1; i++) {
+        const nodeLen = this.nodes.length;
+        for(let i=0; i<nodeLen - 1; i++) {
             this.currState = this.getNextState();
             this.route.push(this.currState);
         }
@@ -132,7 +135,7 @@ class QLearning {
     }
 
     updateEpsilon() {
-        if(this.epsilon > this.minEpsilon) {
+        if (this.epsilon > this.minEpsilon) {
             this.epsilon -= this.subNum;
         }
     }
@@ -158,8 +161,9 @@ class QLearning {
     }
 
     run() {
-        for(let i=0; i<10000; i++) {
-            // console.log('==========================', i, '==========================');
+        console.time();
+        for(let i=0; i<= loopNum; i++) {
+            console.log('==========================', i, '==========================');
             this.setRoute()
             // back sink
 
@@ -168,9 +172,10 @@ class QLearning {
             console.table(this.qTable);
 
             this.init();
-            // console.log('==========================', i, 'end', '==========================');
+            console.log('==========================', i, 'end', '==========================');
 
         }
+        console.timeEnd();
     }
 }
 
