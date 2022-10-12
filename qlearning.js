@@ -1,10 +1,9 @@
-const routePlan = require('./route-plan');
-console.log(routePlan);
-
 // setting
 
-const moveReward = -1;
-const loopNum = 2; // 迴圈執行次數
+const loopNum = 1000; // 迴圈執行次數
+
+let minRoute = [];
+let minDistance = Infinity;
 
 
 // TODO: 尚未實作隨機產生節點方法
@@ -13,6 +12,20 @@ const loopNum = 2; // 迴圈執行次數
 function convertDecimalTwo(num) {
     return Number(num.toFixed(2));
 }
+
+function setMinDistance(distance, route) {
+    
+    console.log('19', minDistance, distance)
+    if (minDistance > distance) {
+        minDistance = distance;
+        minRoute = route;
+    }
+}
+
+function getRandom(x){
+    return Math.floor(Math.random() * x);
+};
+
 // ============= utils =============
 
 class QLearning {
@@ -31,7 +44,7 @@ class QLearning {
 
     gamma = 0.9;
     learning_rate = 0.8;
-    moveReward = -1;
+    moveReward = 0;
 
     constructor(nodes) {
         this.originalNodes = [...nodes];
@@ -75,16 +88,16 @@ class QLearning {
         let nextState;
 
         // 小於 epsilon，則隨機取得下一個 state
-        // if (Math.random() < this.epsilon) {
-        //     const actionIndex = getRandom(this.nodes.length);
-        //     nextState = this.getNode(actionIndex);
-        // } else {
+        if (Math.random() < this.epsilon) {
+            const actionIndex = getRandom(this.nodes.length);
+            nextState = this.getNode(actionIndex);
+        } else {
             const maxReward = this.getReward(this.currState.index);
             const maxRewardIndex = this.getStateQTable(this.currState.index).find(item => item.value === maxReward).index;
             nextState = this.getNode(maxRewardIndex);
             const nextMaxReward = this.getReward(nextState.index)
             this.qTable[this.currState.index][nextState.index] = this.updateQTable(this.currState.index, nextState.index, nextMaxReward);
-        // }
+        }
 
         return nextState;
     }
@@ -140,8 +153,8 @@ class QLearning {
         let distance = 0;
         for (let i = 0; i < this.route.length -1; i++) {
             distance = distance + Math.sqrt(
-                Math.pow(this.route[i].xAxis - this.route[i+1].xAxis, 2) +
-                Math.pow(this.route[i].yAxis - this.route[i+1].yAxis, 2) 
+                Math.pow(this.route[i].x - this.route[i+1].x, 2) +
+                Math.pow(this.route[i].y - this.route[i+1].y, 2) 
             )
         }
         return distance;
@@ -151,46 +164,33 @@ class QLearning {
         for(let i = 0; i < this.route.length - 1; i++) {
             const state = this.route[i].index;
             const nextState = this.route[i+1].index;
-            const qValue = this.qTable[state][nextState] + distance / 10;
+            const reward = minDistance === Infinity ? ( 1 / distance * 10) : 1 / (minDistance - distance) * 10 ;
+            const qValue = this.qTable[state][nextState] + reward;
             this.qTable[state][nextState] = convertDecimalTwo(qValue);
         }
+        console.log(distance, minDistance);
     }
 
     run() {
         console.time();
         for(let i=0; i<= loopNum; i++) {
-            console.log('==========================', i, '==========================');
             this.setRoute()
             // back sink
-
+            
             const distance = this.getDistance();
             this.updateDistanceReward(distance);
-            console.table(this.qTable);
-
+            
+            setMinDistance(distance, this.route);
             this.init();
-            console.log('==========================', i, 'end', '==========================');
 
+            console.log('==========================', i, '==========================');
+            console.table(this.qTable);
+            console.log('distance', distance);
+            console.log('==========================', i, 'end', '==========================');
         }
         console.timeEnd();
     }
 }
 
-let nodes = []
 
-map.forEach((rows, yAxis) => {
-    rows.forEach((cols, xAxis) => {
-        const idx = map.length * yAxis + xAxis;
-        if(cols !== '_') {
-            nodes.push({ xAxis, yAxis, name: cols});
-        }
-    })
-});
-
-nodes = nodes.map((item, index) => ({ ...item, index }));
-
-const qlearning = new QLearning(nodes);
-qlearning.run();
-
-function getRandom(x){
-    return Math.floor(Math.random() * x);
-};
+module.exports = QLearning;

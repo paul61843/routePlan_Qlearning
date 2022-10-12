@@ -1,4 +1,5 @@
 const routePlan = require('./route-plan');
+const QLearning = require('./qlearning');
 const randomPoints = require('./utils/random-point');
 
 /**
@@ -22,14 +23,18 @@ function convertMapToNodes(map) {
         rows.forEach((cols, x) => {
             const idx = map.length * y + x;
             if(cols !== '_') {
-                nodes.push({ x, y, id: cols});
+                nodes.push({ x, y, name: cols});
             }
         })
     });
 
-    return nodes.map((item, index) => ({ ...item, name: index }));
+    return nodes.map((item, index) => ({ ...item, index }));
 }
 
 nodes = convertMapToNodes(map);
 console.table(nodes);
-routePlan.init(nodes);
+
+const qlearning = new QLearning(nodes);
+qlearning.run();
+
+// routePlan.init(nodes);

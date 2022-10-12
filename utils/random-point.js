@@ -7,7 +7,7 @@ function getMultiPoint(num) {
     for(let i = 0; i <num; i++) {
       const x = random(1000);
       const y = random(1000);
-      points.push({ name: i, x, y });
+      points.push({ index: i, x, y });
     }
     return points;
 }

@@ -129,7 +129,7 @@ function getChild(index){
     const index = random(cities.length)
     const value = chromosome1.path[index];
     chromosome[index] = value;
-    newArr = newArr.filter(item => item.name !== value.name);
+    newArr = newArr.filter(item => item.index !== value.index);
   }
   
   chromosome.forEach((item, index) => {
