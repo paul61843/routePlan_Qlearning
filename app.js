@@ -1,6 +1,9 @@
 const routePlan = require('./route-plan');
 const QLearning = require('./qlearning');
 const randomPoints = require('./utils/random-point');
+const getDistance = require('./utils/calc-distance');
+
+const hopTransmissionDistance = 1;
 
 /**
  * S: sink
@@ -17,11 +20,11 @@ const randomPoints = require('./utils/random-point');
 ];
 
 let nodes = []
+let sinkNode;
 
 function convertMapToNodes(map) {
     map.forEach((rows, y) => {
         rows.forEach((cols, x) => {
-            const idx = map.length * y + x;
             if(cols !== '_') {
                 nodes.push({ x, y, name: cols});
             }
@@ -31,10 +34,31 @@ function convertMapToNodes(map) {
     return nodes.map((item, index) => ({ ...item, index }));
 }
 
+function setConnectedNodes(nodes) {
+    const sinkNode = nodes.find(node => node.name === 'S');
+    return nodes.map(currNode => {
+        const connectedNode = nodes.filter(node => {
+            console.log(getDistance(currNode.x, currNode.y, node.x, node.y))
+            return getDistance(currNode.x, currNode.y, node.x, node.y) <= hopTransmissionDistance
+        })
+
+        return { ...currNode, connectedNode }
+    })
+}
+
+
 nodes = convertMapToNodes(map);
+nodes = setConnectedNodes(nodes);
+
+sinkNode = nodes.find(node => node.name === 'S');
+
+
 console.table(nodes);
 
-const qlearning = new QLearning(nodes);
-qlearning.run();
+// const routePlaning = routePlan.init(nodes);
+// console.log(routePlaning)
+
+// const qlearning = new QLearning(nodes);
+// qlearning.run();
 
 // routePlan.init(nodes);

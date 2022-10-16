@@ -27,6 +27,7 @@ function init(points) {
   gResult = gFirstGeneration;
   generateChildren();
   console.timeEnd('init');
+  return gResult[0].path;
 }
 
 function random(range, offset = 0) {

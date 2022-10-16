@@ -13,6 +13,10 @@ function convertDecimalTwo(num) {
     return Number(num.toFixed(2));
 }
 
+function negativeToZero(num) {
+    return num >= 0 ? num : 0;
+}
+
 function setMinDistance(distance, route) {
     
     console.log('19', minDistance, distance)
@@ -113,15 +117,15 @@ class QLearning {
     }
 
     updateQTable(currStateIndex, nextStateIndex, nextMaxReward) {
-        return convertDecimalTwo(this.qTable[currStateIndex][nextStateIndex] + this.learning_rate * (
+        return negativeToZero(convertDecimalTwo(this.qTable[currStateIndex][nextStateIndex] + this.learning_rate * (
             this.moveReward + this.gamma * nextMaxReward - this.qTable[currStateIndex][nextStateIndex]
-        ))
+        )))
     }
 
     updateLastNodeQTable(currStateIndex, nextStateIndex) {
-        return convertDecimalTwo(this.qTable[currStateIndex][nextStateIndex] + this.learning_rate * (
+        return negativeToZero(convertDecimalTwo(this.qTable[currStateIndex][nextStateIndex] + this.learning_rate * (
             this.moveReward - this.qTable[currStateIndex][nextStateIndex]
-        ))
+        )))
     }
 
     setRoute() {
@@ -134,6 +138,7 @@ class QLearning {
         const lastNode = this.nodes[0];
         const maxReward = this.getReward(this.sinkNode.index);
         this.qTable[this.currState.index][lastNode.index] = this.updateQTable(this.currState.index, lastNode.index, maxReward);
+        console.log('141', this.qTable[this.currState.index][lastNode.index])
         this.currState = lastNode;
         this.route.push(lastNode);
 
@@ -166,7 +171,7 @@ class QLearning {
             const nextState = this.route[i+1].index;
             const reward = minDistance === Infinity ? ( 1 / distance * 10) : 1 / (minDistance - distance) * 10 ;
             const qValue = this.qTable[state][nextState] + reward;
-            this.qTable[state][nextState] = convertDecimalTwo(qValue);
+            this.qTable[state][nextState] = negativeToZero(convertDecimalTwo(qValue));
         }
         console.log(distance, minDistance);
     }
