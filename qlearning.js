@@ -162,6 +162,7 @@ class QLearning {
                 Math.pow(this.route[i].y - this.route[i+1].y, 2) 
             )
         }
+        saveMinDistance(distance, this.route);
         return distance;
     }
 
