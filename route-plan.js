@@ -2,7 +2,7 @@
 const POPULATION_SIZE = 30;
 
 // 迭代次數 (終止條件)
-const ITERATION_NUMBER = 1000;
+const ITERATION_NUMBER = 100;
 
 // 基因突變率 80%
 const MUTATION_RATE = 0.8;
@@ -27,7 +27,7 @@ function init(points) {
   gResult = gFirstGeneration;
   generateChildren();
   console.timeEnd('init');
-  return gResult[0].path;
+  return gResult[0];
 }
 
 function random(range, offset = 0) {
