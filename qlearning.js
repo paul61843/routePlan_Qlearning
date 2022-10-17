@@ -2,15 +2,19 @@
 
 const loopNum = 1000; // 迴圈執行次數
 
-let minRoute = [];
 let minDistance = Infinity;
-
-
-// TODO: 尚未實作隨機產生節點方法
+let minRoute = [];
 
 // ============= utils =============
 function convertDecimalTwo(num) {
     return Number(num.toFixed(2));
+}
+
+function saveMinDistance(distance, route) {
+    if (distance < minDistance) {
+        minDistance = distance;
+        minRoute = route;
+    }
 }
 
 function negativeToZero(num) {
@@ -67,7 +71,7 @@ class QLearning {
     }
 
     getSinkNode() {
-        const sinkNode = this.nodes.findIndex(node => node.name === 'S');
+        const sinkNode = this.nodes.findIndex(node => node.name.includes('S'));
         return this.getNode(sinkNode);
     }
 
