@@ -35,10 +35,12 @@ const mapInfo = [
 ]
 
 function convertMapToNodes(map) {
+    let index = 0;
     map.forEach((rows, y) => {
         rows.forEach((cols, x) => {
+            index++;
             if(cols !== '_') {
-                nodes.push({ x, y, name: cols + x});
+                nodes.push({ x, y, name: cols + index});
             }
         })
     });
@@ -48,7 +50,6 @@ function convertMapToNodes(map) {
 function setConnectedNodes(nodes) {
     return nodes.map(currNode => {
         const connectedNode = nodes.filter(node => {
-            console.log(getDistance(currNode.x, currNode.y, node.x, node.y))
             return getDistance(currNode.x, currNode.y, node.x, node.y) <= hopTransmissionDistance
         })
 
@@ -63,16 +64,23 @@ let sinkNode;
 
 
 totalNodes = convertMapToNodes(map);
-// 移除一般節點，只拜訪隔離和電量低的節點
+console.log(totalNodes.map(item => ({ name: item.name, index: item.index })))
+// 移除一般節點(N)，只拜訪隔離和電量低的節點
 nodes = totalNodes.filter(item => !item.name.includes('N')).map((item, index) => ({ ...item, index }));
 nodes = setConnectedNodes(nodes);
 loadBalanceNodes = totalNodes.filter(item => item.name.includes('N'));
+
 
 sinkNode = nodes.find(node => node.name.includes('S'));
 
 
 const { path, distance } = routePlan.init(nodes);
-nodes = path;
+// 修正 經過菁因演算法 index 不同的問題
+nodes = path.map(
+    pathNode => ({ ...pathNode, index: totalNodes.findIndex((node) => node.name === pathNode.name) })
+);
+console.log(nodes.map(item => ({ name: item.name, index: item.index })));
+
 
 const sinkIndex = nodes.findIndex(node => node.name.includes('S'));
 // 調整路徑起點改為 Sink node
@@ -81,7 +89,7 @@ nodes = nodes
     .concat(nodes.slice(0, sinkIndex));
     
 let uavBattery = 30;
-let uavRemainingBattery = uavBattery - distance - nodes.map(item => item.estimatedTime).reduce((sum, num) => sum + num, 0);
+let uavRemainingBattery = Math.floor(uavBattery - distance - nodes.map(item => item.estimatedTime).reduce((sum, num) => sum + num, 0));
 
-const qlearning = new QLearning(nodes, totalNodes, uavRemainingBattery);
+const qlearning = new QLearning(nodes, loadBalanceNodes, totalNodes, uavRemainingBattery);
 qlearning.run();
