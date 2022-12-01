@@ -101,8 +101,8 @@ function generateChildren() {
     gCurrentParents = findExcellent(newGeneration);
     gResult = newGeneration;
     children.push(newGeneration);
-    console.log(`=============== Generation ${i + 1}===============`)
-    console.table([...gResult]);
+    // console.log(`=============== Generation ${i + 1}===============`)
+    // console.table([...gResult]);
 		gGenerationNum = i;
   }
   

@@ -65,21 +65,33 @@ let sinkNode;
 
 totalNodes = convertMapToNodes(map);
 console.log(totalNodes.map(item => ({ name: item.name, index: item.index })))
-// 移除一般節點(N)，只拜訪隔離和電量低的節點
-nodes = totalNodes.filter(item => !item.name.includes('N')).map((item, index) => ({ ...item, index }));
+
+const isolatedNode = totalNodes
+        .filter(item => item.name.includes('I'));
+
+const batterylowNode = totalNodes
+        .filter(item => item.name.includes('B'));    
+        
+nodes = [...isolatedNode, ...batterylowNode].map((item, index) => ({ ...item, index }));        
+
+console.table(nodes);
+
+// 設定各個節點彼此互相連通
 nodes = setConnectedNodes(nodes);
-loadBalanceNodes = totalNodes.filter(item => item.name.includes('N'));
+
+// loadBalance 為 電量低的節點
+loadBalanceNodes = totalNodes.filter(item => item.name.includes('B'));
 
 
 sinkNode = nodes.find(node => node.name.includes('S'));
 
 
 const { path, distance } = routePlan.init(nodes);
-// 修正 經過菁因演算法 index 不同的問題
+// 修正 經過基因演算法 index 不同的問題
 nodes = path.map(
     pathNode => ({ ...pathNode, index: totalNodes.findIndex((node) => node.name === pathNode.name) })
 );
-console.log(nodes.map(item => ({ name: item.name, index: item.index })));
+console.log('app nodes', nodes.map(item => ({ name: item.name, index: item.index })));
 
 
 const sinkIndex = nodes.findIndex(node => node.name.includes('S'));

@@ -66,6 +66,7 @@ class QLearning {
      * uavRemainingBattery 無人跡剩餘電量
      */
     constructor(nodes, remainNodes, totalNodes, uavRemainingBattery) {
+        console.table(remainNodes)
         // console.log('constructor', nodes, remainNodes, totalNodes, uavRemainingBattery)
         // 1 是選擇前往下一個節點的情況
         this.remainNodes = [...remainNodes];
@@ -137,8 +138,6 @@ class QLearning {
         }
 
         this.qTable[this.currState.index][actionIndex] = this.updateQTable(this.currState.index, actionIndex);            
-        console.log(this.currState.name);
-        console.log(this.currState.index)
         return action;
     }
 
@@ -156,9 +155,14 @@ class QLearning {
         const [node] = this.remainNodes.splice(index, 1);
         return node;
     }
-
+    // 找qlearning 相關論文 蠻多都使用在routing
     getActionReward(state, action) {
+        console.log(state, action)
 
+        // 選擇 不做 load balance 
+        if (action === this.originalRemainNodes.length) {
+            return 2;
+        }
         return 10;
     }
 
